@@ -62,7 +62,7 @@
 #include <sstream>
 #endif
 
-#define GETOPT_VERSION "1.0.0" // (2016/04/18) Initial version
+#define GETOPT_VERSION "1.0.1" // (2020/02/20) Initial version
 
 namespace getopt_utils
 {
@@ -112,6 +112,20 @@ namespace getopt_utils
     };
 
     // portable cmdline 
+	inline std::string Unicode2Ascll(const wchar_t *cmd)
+	{
+		std::string cmdA;
+		if (!cmd)
+		{
+			return cmdA;
+		}
+
+		const int len = WideCharToMultiByte(CP_ACP, 0, cmd, -1, NULL, 0, NULL, NULL);
+		cmdA.resize(len, '\0');
+		::WideCharToMultiByte(CP_ACP, 0, cmd, -1, (char *)cmdA.c_str(), len, NULL, NULL);
+
+		return cmdA;
+	}
 
     inline std::vector<std::string> cmdline() {
         std::vector<std::string> args;
@@ -121,8 +135,10 @@ namespace getopt_utils
             auto *list = CommandLineToArgvW( GetCommandLineW(), &argv );
             if( list ) {
                 for( int i = 0; i < argv; ++i ) {
-                    std::wstring ws( list[i] );
-                    args.push_back( std::string( ws.begin(), ws.end() ) );
+                    //std::wstring ws( list[i] );
+					//args.push_back(std::string(ws.begin(), ws.end()));
+					std::string ws = Unicode2Ascll(list[i]);
+					args.emplace_back(std::move(ws));
                 }
                 LocalFree(list);
             }
